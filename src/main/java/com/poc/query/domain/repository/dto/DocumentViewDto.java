@@ -1,5 +1,6 @@
 package com.poc.query.domain.repository.dto;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -21,14 +22,27 @@ public class DocumentViewDto {
     private String id;
     private String name;
 
+    @JsonGetter
+    public String getId() {return id;}
+
+    @JsonGetter
     public String getName() {
         return name;
+    }
+
+    @JsonGetter
+    public Integer getNumberOfLines(){
+        return lines.size();
     }
 
     private List<String> lines;
 
     public List<String> getLines() {
         return Collections.unmodifiableList(lines);
+    }
+
+    public String getText() {
+        return String.join("\n",lines);
     }
 
     public void appendLine(String line){
