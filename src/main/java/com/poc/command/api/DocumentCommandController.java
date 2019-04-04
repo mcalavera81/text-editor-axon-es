@@ -29,12 +29,12 @@ public class DocumentCommandController {
     }
 
     @PostMapping(value = "/{id}/append",consumes = MediaType.TEXT_PLAIN_VALUE)
-    public CompletableFuture<String> appendLine(@PathVariable  String id, @RequestBody String line){
-        return commandService.appendLine(id, line);
+    public void appendLine(@PathVariable  String id, @RequestBody String line){
+        commandService.appendLine(id, line);
     }
 
     @DeleteMapping("/{id}")
-    public CompletableFuture<String> deleteDocument(@PathVariable  String id){
-        return commandService.deleteDocument(id);
+    public void deleteDocument(@PathVariable  String id){
+        commandService.deleteDocument(id);
     }
 }

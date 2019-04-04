@@ -21,6 +21,8 @@ public class DocumentViewDto {
     @Id
     private String id;
     private String name;
+    private List<String> lines;
+
 
     @JsonGetter
     public String getId() {return id;}
@@ -35,11 +37,13 @@ public class DocumentViewDto {
         return lines.size();
     }
 
-    private List<String> lines;
+    public String getLine(int lineNumber){
+        if(lineNumber <= 0) throw new IllegalArgumentException("lineNumber <= 0");
 
-    public List<String> getLines() {
-        return Collections.unmodifiableList(lines);
+        return lines.get(lineNumber-1);
     }
+
+    public List<String> getLines() {return lines;}
 
     public String getText() {
         return String.join("\n",lines);

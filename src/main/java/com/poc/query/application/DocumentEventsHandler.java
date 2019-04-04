@@ -1,18 +1,15 @@
 package com.poc.query.application;
 
-import com.poc.command.event.AppendedLineEvent;
-import com.poc.command.event.DocumentCreatedEvent;
-import com.poc.command.event.DocumentDeletedEvent;
-import com.poc.command.event.UpdatedLineEvent;
+import com.poc.command.event.*;
 import com.poc.query.domain.repository.DocumentViewRepository;
 import com.poc.query.domain.repository.dto.DocumentViewDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.XSlf4j;
 import org.axonframework.eventhandling.EventHandler;
+import org.axonframework.eventsourcing.EventSourcingHandler;
+import org.axonframework.eventsourcing.eventstore.EventStore;
 import org.axonframework.queryhandling.QueryHandler;
 import org.springframework.stereotype.Component;
-
-import java.util.Optional;
 
 @Component
 @XSlf4j
@@ -48,13 +45,33 @@ public class DocumentEventsHandler {
     public void on(UpdatedLineEvent evt) {
         log.trace("projecting {}", evt);
         repository.findById(evt.getId()).ifPresent(doc -> {
-
+            doc.updateLine(evt.getNumber(),evt.getLine());
+            repository.save(doc);
         });
 
     }
 
+    @EventHandler
+    protected void on(UndoAppendedLineEvent evt) {
+        log.debug("applying {}", evt);
+        repository.findById(evt.getId()).ifPresent(doc -> {
+            doc.getLines().remove(doc.getLines().size()-1);
+            repository.save(doc);
+        });
+    }
+
+    @EventHandler
+    protected void on(UndoUpdatedLineEvent evt) {
+        log.debug("applying {}", evt);
+        repository.findById(evt.getId()).ifPresent(doc -> {
+            doc.getLines().set(evt.getNumber()-1,evt.getLine());
+            repository.save(doc);
+        });
+    }
+
     @QueryHandler
-    public DocumentViewDto handle(DocumentQuery query) {
+    public DocumentViewDto findDoc(DocumentQuery query) {
         return repository.findById(query.getDocId()).orElse(null);
     }
+
 }

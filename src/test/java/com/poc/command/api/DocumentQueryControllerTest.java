@@ -38,12 +38,12 @@ public class DocumentQueryControllerTest {
     @Test
     public void test() throws ExecutionException, InterruptedException {
 
-        String docId = commandService.createDocument(new CreateDocumentRequest("docName")).get();
+        String docId = commandService.createDocument(new CreateDocumentRequest("docName")).join();
 
         String[] lines = {"line 1","line 2","line 3"};
-        commandService.appendLine(docId, lines[0]).join();
-        commandService.appendLine(docId, lines[1]).join();
-        commandService.appendLine(docId, lines[2]).join();
+        commandService.appendLine(docId, lines[0]);
+        commandService.appendLine(docId, lines[1]);
+        commandService.appendLine(docId, lines[2]);
 
 
         String documentUrl = baseUrl("/document");
