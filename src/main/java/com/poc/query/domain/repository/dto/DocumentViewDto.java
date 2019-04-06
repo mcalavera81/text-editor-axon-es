@@ -49,11 +49,15 @@ public class DocumentViewDto {
         return String.join("\n",lines);
     }
 
-    public void appendLine(String line){
-        lines.add(line);
+    public void appendLine(String text){
+        lines.add(text);
     }
 
-    public void updateLine(Integer number, String line){
-        lines.set(number-1,line);
+    public void updateLine(Integer lineNumber, String text){
+        lines.set(lineNumber-1,text);
     }
+
+    public void insertLine(Integer lineNumber, String text){lines.add(lineNumber-1,text);}
+
+    public void removeLine(Integer lineNumber){ lines.remove(lineNumber-1);}
 }

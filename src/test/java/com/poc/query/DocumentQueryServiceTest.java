@@ -3,6 +3,7 @@ package com.poc.query;
 
 import com.poc.command.application.DocumentCommandService;
 import com.poc.command.dto.CreateDocumentRequest;
+import com.poc.command.dto.DocumentLineDto;
 import com.poc.query.application.DocumentQueryService;
 import com.poc.query.domain.repository.dto.DocumentViewDto;
 import org.junit.Test;
@@ -30,23 +31,31 @@ public class DocumentQueryServiceTest {
 
         String docId = commandService.createDocument(new CreateDocumentRequest("docName")).join();
 
-        String[] lines = {"line 1", "line 2", "line 3"};
-        commandService.appendLine(docId, lines[0]);
-        System.out.println("-------------------");
-        commandService.appendLine(docId, lines[1]);
-        commandService.appendLine(docId, lines[2]);
-        commandService.updateLine(docId, 2, "new Line 2");
+        String[] lines = {"appendedText 1", "appendedText 2", "appendedText 3"};
+        commandService.appendLine(docId, DocumentLineDto.builder().text(lines[0]).build());
+        commandService.appendLine(docId, DocumentLineDto.builder().text(lines[1]).build());
+        commandService.appendLine(docId, DocumentLineDto.builder().text(lines[2]).build());
+        commandService.updateLine(docId, DocumentLineDto.builder().lineNumber(2).text("new Line 2").build());
+        commandService.insertLine(docId, DocumentLineDto.builder().lineNumber(2).text("insertedLine 2").build());
 
         Thread.sleep(1000);
         DocumentViewDto document = queryService.findDocument(docId);
-        assertThat(document.getLine(2)).isEqualTo("new Line 2");
+        System.out.println(document.getLines());
+        assertThat(document.getLine(2)).isEqualTo("insertedLine 2");
+        assertThat(document.getLine(3)).isEqualTo("new Line 2");
 
-        commandService.undo(docId);
+        commandService.undo(docId); //Undo insert
         Thread.sleep(1000);
         document = queryService.findDocument(docId);
-        assertThat(document.getLine(2)).isEqualTo("line 2");
+        assertThat(document.getLine(2)).isEqualTo("new Line 2");
 
-        commandService.undo(docId);
+        commandService.undo(docId); //Undo update
+        Thread.sleep(1000);
+        document = queryService.findDocument(docId);
+        assertThat(document.getLine(2)).isEqualTo("appendedText 2");
+        assertThat(document.getLines().size()).isEqualTo(3);
+
+        commandService.undo(docId); //Undo append
         Thread.sleep(1000);
         document = queryService.findDocument(docId);
         assertThat(document.getLines().size()).isEqualTo(2);

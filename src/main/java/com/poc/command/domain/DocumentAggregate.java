@@ -7,7 +7,6 @@ import org.axonframework.eventhandling.DomainEventMessage;
 import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.eventsourcing.eventstore.EventStore;
 import org.axonframework.modelling.command.AggregateIdentifier;
-import org.axonframework.modelling.command.AggregateLifecycle;
 import org.axonframework.spring.stereotype.Aggregate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +47,7 @@ public class DocumentAggregate {
     @CommandHandler
     public DocumentAggregate(CreateDocumentCommand cmd) {
         log.debug("handling {}", cmd);
-        apply(new DocumentCreatedEvent(cmd.getId(), cmd.getName()));
+        apply(new DocumentCreatedEvent(cmd.getId(), cmd.getDocName()));
     }
 
     @CommandHandler
@@ -61,23 +60,45 @@ public class DocumentAggregate {
     public void append(AppendLineCommand cmd) {
         if(deleted) throw new IllegalStateException("Document deleted");
 
-        lines.add(cmd.getLine());
-        apply(new AppendedLineEvent(cmd.getId(), cmd.getLine()));
+        apply(new AppendedLineEvent(cmd.getId(), cmd.getLineNumber()));
     }
 
 
     @CommandHandler
     public void updateLine(UpdateLineCommand cmd) {
         if(deleted) throw new IllegalStateException("Document deleted");
-        if(cmd.getNumber() <= 0) throw new IllegalArgumentException("amount <= 0");
-        if(cmd.getNumber() > lines.size()){
-            throw new IllegalStateException("number > total number of lines");
+        if(cmd.getLineNumber() <= 0) throw new IllegalArgumentException("amount <= 0");
+        if(cmd.getLineNumber() > lines.size()){
+            throw new IllegalStateException("lineNumber > total lineNumber of lines");
         }
 
-        String oldLine = lines.get(cmd.getNumber()-1);
-        apply(new UpdatedLineEvent(cmd.getId(), cmd.getNumber(),cmd.getLine(), oldLine));
-        lines.set(cmd.getNumber()-1,cmd.getLine());
+        String oldText = lines.get(cmd.getLineNumber()-1);
+        apply(new UpdatedLineEvent(cmd.getId(), cmd.getLineNumber(),cmd.getText(), oldText));
     }
+
+    @CommandHandler
+    public void insertLine(InsertLineCommand cmd) {
+        if(deleted) throw new IllegalStateException("Document deleted");
+        if(cmd.getLineNumber() <= 0) throw new IllegalArgumentException("amount <= 0");
+        if(cmd.getLineNumber() > lines.size()){
+            throw new IllegalStateException("lineNumber > total lineNumber of lines");
+        }
+
+        apply(new InsertedLineEvent(cmd.getId(), cmd.getLineNumber(),cmd.getText()));
+    }
+
+    @CommandHandler
+    public void removeLine(RemoveLineCommand cmd) {
+        if(deleted) throw new IllegalStateException("Document deleted");
+        if(cmd.getLineNumber() <= 0) throw new IllegalArgumentException("amount <= 0");
+        if(cmd.getLineNumber() > lines.size()){
+            throw new IllegalStateException("lineNumber > total lineNumber of lines");
+        }
+
+        String text = lines.get(cmd.getLineNumber()-1);
+        apply(new RemovedLineEvent(cmd.getId(), cmd.getLineNumber(),text));
+    }
+
 
     @CommandHandler
     public void undo(UndoCommand cmd) {
@@ -125,13 +146,25 @@ public class DocumentAggregate {
     @EventSourcingHandler
     protected void on(AppendedLineEvent evt) {
         log.debug("applying {}", evt);
-        lines.add(evt.getLine());
+        lines.add(evt.getAppendedText());
     }
 
     @EventSourcingHandler
     protected void on(UpdatedLineEvent evt) {
         log.debug("applying {}", evt);
-        lines.set(evt.getNumber()-1,evt.getLine());
+        lines.set(evt.getLineNumber()-1,evt.getText());
+    }
+
+    @EventSourcingHandler
+    protected void on(InsertedLineEvent evt) {
+        log.debug("applying {}", evt);
+        lines.add(evt.getLineNumber()-1,evt.getInsertedText());
+    }
+
+    @EventSourcingHandler
+    protected void on(RemovedLineEvent evt) {
+        log.debug("applying {}", evt);
+        lines.remove(evt.getLineNumber()-1);
     }
 
     @EventSourcingHandler
@@ -143,8 +176,21 @@ public class DocumentAggregate {
     @EventSourcingHandler
     protected void on(UndoUpdatedLineEvent evt) {
         log.debug("applying {}", evt);
-        lines.set(evt.getNumber()-1,evt.getLine());
+        lines.set(evt.getLineNumber()-1,evt.getText());
     }
+
+    @EventSourcingHandler
+    protected void on(UndoInsertedLineEvent evt) {
+        log.debug("applying {}", evt);
+        lines.remove(evt.getLineNumber()-1);
+    }
+
+    @EventSourcingHandler
+    protected void on(UndoRemovedLineEvent evt) {
+        log.debug("applying {}", evt);
+        lines.add(evt.getLineNumber()-1, evt.getText());
+    }
+
 
     private AggregateHistoryDTO domainEventToAggregateHistory(DomainEventMessage<?> event)
     {

@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.XSlf4j;
 import org.axonframework.eventhandling.EventHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;
-import org.axonframework.eventsourcing.eventstore.EventStore;
 import org.axonframework.queryhandling.QueryHandler;
 import org.springframework.stereotype.Component;
 
@@ -22,7 +21,7 @@ public class DocumentEventsHandler {
     @EventHandler
     public void on(DocumentCreatedEvent evt) {
         log.trace("projecting {}", evt);
-        repository.save(new DocumentViewDto(evt.getId(), evt.getName()));
+        repository.save(new DocumentViewDto(evt.getId(), evt.getDocName()));
     }
 
     @EventHandler
@@ -35,7 +34,7 @@ public class DocumentEventsHandler {
     public void on(AppendedLineEvent evt) {
         log.trace("projecting {}", evt);
         repository.findById(evt.getId()).ifPresent(doc -> {
-            doc.appendLine(evt.getLine());
+            doc.appendLine(evt.getAppendedText());
             repository.save(doc);
         });
     }
@@ -45,7 +44,28 @@ public class DocumentEventsHandler {
     public void on(UpdatedLineEvent evt) {
         log.trace("projecting {}", evt);
         repository.findById(evt.getId()).ifPresent(doc -> {
-            doc.updateLine(evt.getNumber(),evt.getLine());
+            doc.updateLine(evt.getLineNumber(),evt.getText());
+            repository.save(doc);
+        });
+
+    }
+
+
+    @EventHandler
+    protected void on(InsertedLineEvent evt) {
+        log.debug("projecting {}", evt);
+        repository.findById(evt.getId()).ifPresent(doc -> {
+            doc.insertLine(evt.getLineNumber(), evt.getInsertedText());
+            repository.save(doc);
+        });
+
+    }
+
+    @EventHandler
+    protected void on(RemovedLineEvent evt) {
+        log.debug("projecting {}", evt);
+        repository.findById(evt.getId()).ifPresent(doc -> {
+            doc.removeLine(evt.getLineNumber());
             repository.save(doc);
         });
 
@@ -64,9 +84,29 @@ public class DocumentEventsHandler {
     protected void on(UndoUpdatedLineEvent evt) {
         log.debug("applying {}", evt);
         repository.findById(evt.getId()).ifPresent(doc -> {
-            doc.getLines().set(evt.getNumber()-1,evt.getLine());
+            doc.getLines().set(evt.getLineNumber()-1,evt.getText());
             repository.save(doc);
         });
+    }
+
+    @EventHandler
+    protected void on(UndoInsertedLineEvent evt) {
+        log.debug("projecting {}", evt);
+        repository.findById(evt.getId()).ifPresent(doc -> {
+            doc.removeLine(evt.getLineNumber());
+            repository.save(doc);
+        });
+
+    }
+
+    @EventHandler
+    protected void on(UndoRemovedLineEvent evt) {
+        log.debug("projecting {}", evt);
+        repository.findById(evt.getId()).ifPresent(doc -> {
+            doc.insertLine(evt.getLineNumber(),evt.getText());
+            repository.save(doc);
+        });
+
     }
 
     @QueryHandler

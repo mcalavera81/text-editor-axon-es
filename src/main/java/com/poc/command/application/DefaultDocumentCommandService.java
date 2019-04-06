@@ -2,6 +2,7 @@ package com.poc.command.application;
 
 import com.poc.command.domain.*;
 import com.poc.command.dto.CreateDocumentRequest;
+import com.poc.command.dto.DocumentLineDto;
 import com.poc.command.event.DocumentEvent;
 import com.poc.query.domain.repository.dto.AggregateHistoryDTO;
 import lombok.RequiredArgsConstructor;
@@ -35,13 +36,23 @@ public class DefaultDocumentCommandService implements DocumentCommandService {
     }
 
     @Override
-    public void appendLine(String id, String line) {
-        commandGateway.send(new AppendLineCommand(id, line)).join();
+    public void appendLine(String id, DocumentLineDto line) {
+        commandGateway.send(new AppendLineCommand(id, line.getText())).join();
     }
 
     @Override
-    public void updateLine(String id, Integer number, String line) {
-        commandGateway.send(new UpdateLineCommand(id, number, line)).join();
+    public void updateLine(String id, DocumentLineDto line) {
+        commandGateway.send(new UpdateLineCommand(id, line.getLineNumber(), line.getText())).join();
+    }
+
+    @Override
+    public void insertLine(String id, DocumentLineDto line) {
+        commandGateway.send(new InsertLineCommand(id, line.getLineNumber(), line.getText())).join();
+    }
+
+    @Override
+    public void removeLine(String id, DocumentLineDto line) {
+        commandGateway.send(new RemoveLineCommand(id, line.getLineNumber())).join();
     }
 
     @Override

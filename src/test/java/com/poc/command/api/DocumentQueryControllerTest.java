@@ -4,6 +4,7 @@ import com.jayway.restassured.filter.log.RequestLoggingFilter;
 import com.jayway.restassured.filter.log.ResponseLoggingFilter;
 import com.poc.command.application.DocumentCommandService;
 import com.poc.command.dto.CreateDocumentRequest;
+import com.poc.command.dto.DocumentLineDto;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,10 +41,10 @@ public class DocumentQueryControllerTest {
 
         String docId = commandService.createDocument(new CreateDocumentRequest("docName")).join();
 
-        String[] lines = {"line 1","line 2","line 3"};
-        commandService.appendLine(docId, lines[0]);
-        commandService.appendLine(docId, lines[1]);
-        commandService.appendLine(docId, lines[2]);
+        String[] lines = {"insertedText 1","insertedText 2","insertedText 3"};
+        commandService.appendLine(docId, DocumentLineDto.builder().text(lines[0]).build() );
+        commandService.appendLine(docId, DocumentLineDto.builder().text(lines[1]).build());
+        commandService.appendLine(docId, DocumentLineDto.builder().text(lines[2]).build());
 
 
         String documentUrl = baseUrl("/document");
