@@ -36,23 +36,23 @@ public class DefaultDocumentCommandService implements DocumentCommandService {
     }
 
     @Override
-    public void appendLine(String id, DocumentLineDto line) {
-        commandGateway.send(new AppendLineCommand(id, line.getText())).join();
+    public CompletableFuture<Void> appendLine(String id, DocumentLineDto line) {
+        return commandGateway.send(new AppendLineCommand(id, line.getText()));
     }
 
     @Override
-    public void updateLine(String id, DocumentLineDto line) {
-        commandGateway.send(new UpdateLineCommand(id, line.getLineNumber(), line.getText())).join();
+    public CompletableFuture<Void> updateLine(String id, DocumentLineDto line) {
+        return commandGateway.send(new UpdateLineCommand(id, line.getLineNumber(), line.getText()));
     }
 
     @Override
-    public void insertLine(String id, DocumentLineDto line) {
-        commandGateway.send(new InsertLineCommand(id, line.getLineNumber(), line.getText())).join();
+    public CompletableFuture<Void> insertLine(String id, DocumentLineDto line) {
+        return commandGateway.send(new InsertLineCommand(id, line.getLineNumber(), line.getText()));
     }
 
     @Override
-    public void removeLine(String id, DocumentLineDto line) {
-        commandGateway.send(new RemoveLineCommand(id, line.getLineNumber())).join();
+    public CompletableFuture<Void> removeLine(String id, DocumentLineDto line) {
+        return commandGateway.send(new RemoveLineCommand(id, line.getLineNumber()));
     }
 
     @Override
