@@ -62,7 +62,7 @@ public class DocumentCommandController {
                 .exceptionally(e -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new CommandDto(e.getMessage())));
     }
 
-    @PostMapping(value = "/{docId}/undo",consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/{docId}/undo")
     public void undo(@PathVariable  String docId){
         commandService.undo(docId);
     }
