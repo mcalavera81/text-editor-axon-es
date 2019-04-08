@@ -5,4 +5,4 @@ if ! [[ -x "$(command -v docker)" ]]; then
   exit 1
 fi
 
-docker run -it text-editor
+docker run -it -p 8080:8080 text-editor
