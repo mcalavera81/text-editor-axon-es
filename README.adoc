@@ -1,0 +1,70 @@
+
+= Text Editor example application
+
+
+== Application architecture
+
+This application implements a basic text editor leveraging Domain Driven Design
+patterns. The main patterns that shape the broad architecture are Command
+Query Responsibility Segregation (CQRS) and Event Sourcing (ES).
+This architecture is supported by Axon framework.
+
+==== Command Side
+
+`DocumentCommandController` is the entry point for commands which are eventually handled by `DocumentAggregate`.
+The Document Aggregate handles the following commands:
+
+*  CreateDocumentCommand: Creates a new document. Exposed via POST at `_/document_`
+*  DeleteDocumentCommand: Deletes a document. Exposed via POST at _/document/{docId}_`
+*  AppendLineCommand: Appends a  line to an existing document. Exposed via POST at `_/document/{docId}/append_`
+*  UpdateLineCommand: Updates a line in an existing document. Exposed via POST at `_/document/{docId}/update_`
+*  InsertLineCommand: Inserts a line in an existing document. Exposed via POST at `_/document/{docId}/insert_`
+*  RemoveLineCommand: Removes a line in an existing document. Exposed via POST at `_/document/{docId}/remove_`
+*  UndoCommand: Undoes the last command. Exposed via POST at `_/document/{docId}/undo_`
+
+Each command once validated spawns at least one event consumed by the Aggregate (thus having and event sourced aggregate)
+and the Query side.
+
+==== Query Side
+
+`DocumentQueryController` is the entry point for the Document's view model.
+Two endpoints are available:
+
+* GET at /document/{id}/size: Retrieves number of lines of a document.
+* GET at /document/{id}/text: Retrieves text of a document.
+
+
+== Building and running the application
+
+=== Pre-requisites
+
+* Docker
+* Internet access
+
+
+=== Testing and Building Docker image
+
+```
+./build.sh
+```
+
+=== Running Docker image (listening on port 8080)
+
+```
+./run.sh
+```
+
+=== Using the application
+
+
+To get better grasp of the application you can run a sample scenario with `./sample-script.sh`. The following commands
+are applied in sequence:
+
+* Creates a document
+* Appends line `First line`
+* Appends line `Second line`
+* Updates line number `1`  with `First line modified`
+* Inserts line `Inserted at 1` at line number `1`
+* Inserts line `Inserted at 3` at line number `3`
+* Removes line at line number `2`
+* Undo all operations one by one until the document is empty
